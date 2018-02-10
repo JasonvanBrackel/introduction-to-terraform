@@ -1,0 +1,17 @@
+Examples
+
+1 - simple Examples - check
+2 - Add something - check
+3 - Take away something - check
+4 - Add and take away something - check
+5 - Variables
+6 - Dependency Graphs
+https://www.youtube.com/watch?v=Ce3RNfRbdZ0
+7 - Implicit vs. Explicit Dependency
+8 - Provisioners
+9 - Modules
+10 - Backends
+12 - Let's talk about state
+https://www.terraform.io/intro/getting-started/remote.html
+11 - Setup consul
+https://www.consul.io/?_ga=2.230597660.1260277108.1518101427-724086777.1515474614

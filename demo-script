@@ -1,0 +1,196 @@
+# Welcome to Introduction to Terraform with Azure
+
+# Let's review those Key Features
+
+# But first we need to be able to talk to Azure
+
+# Prerequisites
+
+# Chocolatey for installation
+Write-Host "Start"
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+# Azure CLI 2.0
+choco install azure-cli -y
+
+# Install Terraform
+choco install terraform -y
+
+# There are two ways to authenticate
+
+# Simple way via the Azure CLI - Local Development
+az login
+
+# Not as simple way - Azure Service Principal - Shared Environments, CI/CD, Automation
+
+# Set the current subscrition
+az account set --subscription "Visual Studio Professional with MSDN"
+
+$subscriptionId = $(az account list | join-string | ConvertFrom-Json) | Where-Object { $_.name -eq "Visual Studio Professional with MSDN" } | Select-Object -ExpandProperty id
+$subscriptionId
+
+# Create an Azure AD Service Principal
+$serviceprincipal = $(az ad sp create-for-rbac --name "Terraform" --role contributor --scopes /subscriptions/$subscriptionId | Join-String | ConvertFrom-Json)
+
+# Save this for later
+"# Configure the MS Azure Provider.`n" + "provider `"azurerm`" {`n" + "`tsubscription_id = `"$subscriptionId`",`n"  + "`tclient_id = `"$($serviceprincipal.appId)`",`n"  + "`tclient_secret = `"$($serviceprincipal.password)`",`n"  + "`ttenant_id = `"$($serviceprincipal.tenant)`",`n"  + "}" | Out-File "azure-auth.tf"
+
+# CHANGE THE FILE TO UTF-8
+code ./azure-auth.tf
+
+# Test the service principal
+# log out
+az logout
+
+# Login as the Service Principal
+az login --service-principal -u $serviceprincipal.appId -p $serviceprincipal.password --tenant $serviceprincipal.Tenant
+
+# Check for vm sizes
+az vm list-sizes --location eastus
+
+# Check for locations
+az account list-locations
+
+# Logout of the Service Principal
+az logout
+
+#  Let's talk about service principals
+Start-Process chrome https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-application-objects
+
+# A really good overview
+Start-Process chrome https://cloudblogs.microsoft.com/enterprisemobility/2016/09/12/the-azuread-admin-experience-in-the-new-azure-portal-is-now-in-public-preview/
+
+# Let's start with a simple example
+# Virtual Network with a single subnet
+code.cmd ./example-01-simple-vnet
+
+# Copy our auth file
+Copy-Item ./azure-auth.tf ./example-01-simple-vnet/
+Push-Location ./example-01-simple-vnet
+
+# Initalize the directory 
+terraform init
+
+# Let's see what terraform is going to do
+terraform plan -out ./example-01-simple-vnet.tfplan
+
+# Let's execute it
+terraform apply
+
+Pop-Location
+
+# Let's see what happens when we make a chnage
+Copy-Item -Recurse .\example-01-simple-vnet\ .\example-02-simple-vnet-add-subnet
+
+Push-Location .\example-02-simple-vnet-add-subnet
+
+# Let's add the subnet
+code.cmd ./
+
+# See the new plan
+terraform plan
+
+# Let's execute it
+terraform apply
+Pop-Location
+
+# How about more than one change 
+Copy-Item -Recurse .\example-02-simple-vnet\ .\example-03-multiple-changes
+
+Push-Location .\example-03-multiple-changes
+
+# Let's add something and remove something
+code.cmd ./
+
+# See the new plan
+terraform plan
+
+# Let's execute it
+terraform apply
+
+# Tearing it all down
+terraform destory
+Pop-Location
+
+# Variables
+# Variable files
+Push-Location .\example-04-variables
+
+code .
+
+# Varable Usage 1 variables file
+# See the new plan
+terraform init
+terraform plan
+
+# Let's execute it
+terraform apply -var-file "secret.tfvars" -var-file "location.tfvars"
+Pop-Location
+
+# Variable Usage 2 Command Line
+terraform destory
+terraform plan
+terraform apply -var 'location=East US'
+
+# Varable Usage 3 UI Prompt
+terraform destory
+terraform plan
+terraform apply
+
+# Varable Usage 4 Environment Variables
+terraform destory
+terraform plan
+$env:TF_VAR_location = "East US"
+terraform apply -var-file "secret.tfvars"
+
+# Other variable types
+Start-Process chrome "https://www.terraform.io/intro/getting-started/variables.html"
+
+# Output Variables
+Pop-Location
+Push-Location ./example-05-output-variables
+
+code .
+
+terraform apply
+terraform output location
+
+Pop-Location
+
+# Dependency Graphs
+Push-Location ./sql-example
+
+code .
+terraform init
+terraform plan
+terraform graph
+
+Pop-Location
+
+# For more on Dependency Graphs and Graph Theory in Terraform
+Start-Process chrome https://www.youtube.com/watch?v=Ce3RNfRbdZ0
+
+# Provisioners
+terraform apply
+
+# provisioner "remote-exec" {
+#    inline = [
+#      Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+#      $env:Path += ";C:\ProgramData\chocolatey\bin\"
+#       choco install sql-server-management-studio -y
+#    ]
+#  }
+Write-Host "Pause"
+
+# provisioner "file" {
+#    source = ./Install-SSMS.ps1
+#    destination = "C:\Temp\Install-SSMS.ps1"
+#  }
+#
+# provisioner "remote-exec" {
+#    inline = [
+#      C:\Temp\Install-SSMS.ps1
+#    ]
+#  }
+
+Write-Host "Pause"
