@@ -286,8 +286,13 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# vscode
 .vscode/
+
+# terraform
 .terraform/
 *.tfstate
 *.tfstate.backup
 *.tfplan
+azure-auth.tf

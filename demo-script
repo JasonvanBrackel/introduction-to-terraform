@@ -60,6 +60,9 @@ Start-Process chrome https://docs.microsoft.com/en-us/azure/active-directory/dev
 # A really good overview
 Start-Process chrome https://cloudblogs.microsoft.com/enterprisemobility/2016/09/12/the-azuread-admin-experience-in-the-new-azure-portal-is-now-in-public-preview/
 
+# Let's open or azure portal
+Start-Process chrome https://portal.azure.com
+
 # Let's start with a simple example
 # Virtual Network with a single subnet
 code.cmd ./example-01-simple-vnet
@@ -95,7 +98,7 @@ terraform apply
 Pop-Location
 
 # How about more than one change 
-Copy-Item -Recurse .\example-02-simple-vnet\ .\example-03-multiple-changes
+Copy-Item -Recurse .\example-02-simple-vnet-add-subnet\ .\example-03-multiple-changes
 
 Push-Location .\example-03-multiple-changes
 
@@ -109,7 +112,7 @@ terraform plan
 terraform apply
 
 # Tearing it all down
-terraform destory
+terraform destroy
 Pop-Location
 
 # Variables
@@ -118,30 +121,28 @@ Push-Location .\example-04-variables
 
 code .
 
-# Varable Usage 1 variables file
+# Varable Usage 1 Variable file
 # See the new plan
 terraform init
-terraform plan
+
+Write-Host "Check your creds"
+terraform plan -var-file "secret.tfvars" -var-file "location.tfvars"
 
 # Let's execute it
 terraform apply -var-file "secret.tfvars" -var-file "location.tfvars"
-Pop-Location
 
 # Variable Usage 2 Command Line
-terraform destory
 terraform plan
-terraform apply -var 'location=East US'
+terraform apply -var 'location=East US' -var-file "secret.tfvars"
 
 # Varable Usage 3 UI Prompt
-terraform destory
-terraform plan
-terraform apply
+terraform destroy
 
 # Varable Usage 4 Environment Variables
-terraform destory
-terraform plan
 $env:TF_VAR_location = "East US"
+terraform plan -var-file "secret.tfvars"
 terraform apply -var-file "secret.tfvars"
+terraform destroy -var-file "secret.tfvars"
 
 # Other variable types
 Start-Process chrome "https://www.terraform.io/intro/getting-started/variables.html"
@@ -152,20 +153,23 @@ Push-Location ./example-05-output-variables
 
 code .
 
+Copy-Item ../azure-auth.tf ./
+terraform init
+terraform plan
 terraform apply
 terraform output location
 
 Pop-Location
 
 # Dependency Graphs
-Push-Location ./sql-example
+Push-Location ./vm-example
+
+Copy-Item ../azure-auth.tf ./
 
 code .
 terraform init
 terraform plan
 terraform graph
-
-Pop-Location
 
 # For more on Dependency Graphs and Graph Theory in Terraform
 Start-Process chrome https://www.youtube.com/watch?v=Ce3RNfRbdZ0
@@ -192,5 +196,9 @@ Write-Host "Pause"
 #      C:\Temp\Install-SSMS.ps1
 #    ]
 #  }
+Pop-Location
+Write-Host "Pause - Modules is next"
+Start-Process chrome "https://github.com/hashicorp/terraform-azurerm-consul"
+git clone git@github.com:hashicorp/terraform-azurerm-consul.git
 
-Write-Host "Pause"
+
