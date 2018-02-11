@@ -1,3 +1,5 @@
+$InvocationPath = $MyInvocation.MyCommand.Path | Split-Path -Parent
+. "$InvocationPath\Out-FileUTF8WithoutBOM.ps1"
 # Welcome to Introduction to Terraform with Azure
 
 # Let's review those Key Features
@@ -31,8 +33,8 @@ $subscriptionId
 # Create an Azure AD Service Principal
 $serviceprincipal = $(az ad sp create-for-rbac --name "Terraform" --role contributor --scopes /subscriptions/$subscriptionId | ConvertFrom-Json)
 
-# Save this for later make sure it's UTF-8
-"# Configure the MS Azure Provider.`n" + "provider `"azurerm`" {`n" + "`tsubscription_id = `"$subscriptionId`",`n"  + "`tclient_id = `"$($serviceprincipal.appId)`",`n"  + "`tclient_secret = `"$($serviceprincipal.password)`",`n"  + "`ttenant_id = `"$($serviceprincipal.tenant)`",`n"  + "}" | Out-File "azure-auth.tf" -Encoding UTF8
+# Save this for later make sure it's UTF-8 without the BOM
+"# Configure the MS Azure Provider.`n" + "provider `"azurerm`" {`n" + "`tsubscription_id = `"$subscriptionId`",`n"  + "`tclient_id = `"$($serviceprincipal.appId)`",`n"  + "`tclient_secret = `"$($serviceprincipal.password)`",`n"  + "`ttenant_id = `"$($serviceprincipal.tenant)`",`n"  + "}" | Out-FileUTF8WithoutBOM -Path "$InvocationPath\azure-auth.tf"
 
 # Test the service principal
 # log out
@@ -122,7 +124,7 @@ code .
 terraform init
 
 # Create a variables file to hold our secrets
-"subscription_id = `"$subscriptionId`"`n"  + "client_id = `"$($serviceprincipal.appId)`"`n"  + "client_secret = `"$($serviceprincipal.password)`"`n"  + "tenant_id = `"$($serviceprincipal.tenant)`"" | Out-File "secret.tfvars" -Encoding UTF8
+"subscription_id = `"$subscriptionId`"`n"  + "client_id = `"$($serviceprincipal.appId)`"`n"  + "client_secret = `"$($serviceprincipal.password)`"`n"  + "tenant_id = `"$($serviceprincipal.tenant)`"" | Out-FileUTF8WithoutBOM -Path "$(Get-Location)\secret.tfvars" 
 
 terraform plan -var-file "secret.tfvars" -var-file "location.tfvars"
 

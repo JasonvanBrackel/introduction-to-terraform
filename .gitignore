@@ -296,3 +296,4 @@ __pycache__/
 *.tfstate.backup
 *.tfplan
 azure-auth.tf
+secret.tfvars
