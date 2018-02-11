@@ -17,7 +17,6 @@ choco install azure-cli -y
 choco install terraform -y
 
 # There are two ways to authenticate
-
 # Simple way via the Azure CLI - Local Development
 az login
 
@@ -26,17 +25,14 @@ az login
 # Set the current subscrition
 az account set --subscription "Visual Studio Professional with MSDN"
 
-$subscriptionId = $(az account list | join-string | ConvertFrom-Json) | Where-Object { $_.name -eq "Visual Studio Professional with MSDN" } | Select-Object -ExpandProperty id
+$subscriptionId = $(az account list | ConvertFrom-Json) | Where-Object { $_.name -eq "Visual Studio Professional with MSDN" } | Select-Object -ExpandProperty id
 $subscriptionId
 
 # Create an Azure AD Service Principal
-$serviceprincipal = $(az ad sp create-for-rbac --name "Terraform" --role contributor --scopes /subscriptions/$subscriptionId | Join-String | ConvertFrom-Json)
+$serviceprincipal = $(az ad sp create-for-rbac --name "Terraform" --role contributor --scopes /subscriptions/$subscriptionId | ConvertFrom-Json)
 
-# Save this for later
-"# Configure the MS Azure Provider.`n" + "provider `"azurerm`" {`n" + "`tsubscription_id = `"$subscriptionId`",`n"  + "`tclient_id = `"$($serviceprincipal.appId)`",`n"  + "`tclient_secret = `"$($serviceprincipal.password)`",`n"  + "`ttenant_id = `"$($serviceprincipal.tenant)`",`n"  + "}" | Out-File "azure-auth.tf"
-
-# CHANGE THE FILE TO UTF-8
-code ./azure-auth.tf
+# Save this for later make sure it's UTF-8
+"# Configure the MS Azure Provider.`n" + "provider `"azurerm`" {`n" + "`tsubscription_id = `"$subscriptionId`",`n"  + "`tclient_id = `"$($serviceprincipal.appId)`",`n"  + "`tclient_secret = `"$($serviceprincipal.password)`",`n"  + "`ttenant_id = `"$($serviceprincipal.tenant)`",`n"  + "}" | Out-File "azure-auth.tf" -Encoding UTF8
 
 # Test the service principal
 # log out
@@ -125,7 +121,9 @@ code .
 # See the new plan
 terraform init
 
-Write-Host "Check your creds"
+# Create a variables file to hold our secrets
+"subscription_id = `"$subscriptionId`"`n"  + "client_id = `"$($serviceprincipal.appId)`"`n"  + "client_secret = `"$($serviceprincipal.password)`"`n"  + "tenant_id = `"$($serviceprincipal.tenant)`"" | Out-File "secret.tfvars" -Encoding UTF8
+
 terraform plan -var-file "secret.tfvars" -var-file "location.tfvars"
 
 # Let's execute it
